@@ -8,7 +8,7 @@
 
 ### Masonry
 #### Source
-[`web-components/vi-masonry.js`](web-components/vi-masonry.js)#### Usage
+[`web-components/vi-masonry.js`](web-components/vi-masonry.js)
 
 #### Usage
 In `html`, use it like this, where:
@@ -31,7 +31,7 @@ masonry.columnWidth()    // get the column width
 masonry.columnWidth(300) // set the column width
 masonry.refresh()        // refreshes the UI
 
-// An you can also chain them
+// And you can also chain them
 masonry.gap(20).columnWidth(500).refresh()
 ```
 
