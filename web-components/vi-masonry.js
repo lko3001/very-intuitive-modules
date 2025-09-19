@@ -1,5 +1,5 @@
 class ViMasonry extends HTMLElement {
-    #colWidth = 0;
+    #colWidth = 300;
     #colCount = 1;
     #gap = 0;
     #cols = [];
@@ -46,7 +46,8 @@ class ViMasonry extends HTMLElement {
     }
 
     #updateUI() {
-        this.#colCount = Math.max(Math.floor((this.offsetWidth + this.#gap) / (this.#colWidth + this.#gap)), 1);
+        this.#colCount = Math.floor((this.offsetWidth + this.#gap) / (this.#colWidth + this.#gap));
+        this.#colCount = Math.max(Math.min(this.#colCount, this.#items.length), 1);
 
         // remove all children
         while (this.children.length) {
