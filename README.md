@@ -1,6 +1,6 @@
 # Very Intuitive Modules
 
-- Web Components
+- [Web Components](#web-components)
   - [Masonry](#masonry)
   - [Random Image](#random-image)
 
