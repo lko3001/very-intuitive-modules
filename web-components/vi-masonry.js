@@ -6,6 +6,7 @@ class ViMasonry extends HTMLElement {
     #items = [];
     #lastWidth = 0;
     #resizeTimeout = null;
+    #isRefreshing = false;
 
     constructor() {
         super();
@@ -72,6 +73,9 @@ class ViMasonry extends HTMLElement {
     }
 
     refresh(customOptions = {}) {
+        if (this.#isRefreshing) return;
+        this.#isRefreshing = true;
+
         const defaults = {
             transition: true,
             gap: undefined,
@@ -83,11 +87,16 @@ class ViMasonry extends HTMLElement {
         this.columnWidth(options.columnWidth);
 
         if (document.startViewTransition && options.transition) {
-            document.startViewTransition(() => {
-                this.#updateUI();
-            });
+            document
+                .startViewTransition(() => {
+                    this.#updateUI();
+                })
+                .finished.finally(() => {
+                    this.#isRefreshing = false;
+                });
         } else {
             this.#updateUI();
+            this.#isRefreshing = false;
         }
     }
 
