@@ -1,28 +1,28 @@
 class ViMasonry extends HTMLElement {
-    #colWidth = 300;
-    #colCount = 1;
-    #gap = 0;
-    #cols = [];
-    #items = [];
-    #lastWidth = 0;
-    #resizeTimeout = null;
-    #isRefreshing = false;
+    _colWidth = 300;
+    _colCount = 1;
+    _gap = 0;
+    _cols = [];
+    _items = [];
+    _lastWidth = 0;
+    _resizeTimeout = null;
+    _isRefreshing = false;
 
     constructor() {
         super();
     }
 
     connectedCallback() {
-        this.#colWidth = Number(this.getAttribute("col-width"));
-        this.#gap = Number(this.getAttribute("gap"));
-        this.#items = Array.from(this.children);
+        this._updateItems();
+        this._colWidth = Number(this.getAttribute("col-width"));
+        this._gap = Number(this.getAttribute("gap"));
 
         this.style.display = "grid";
         this.style.gridAutoFlow = "column";
         this.style.gridAutoColumns = "1fr";
-        this.style.columnGap = `${this.#gap}px`;
+        this.gap(this._gap);
 
-        this.#lastWidth = this.offsetWidth;
+        this._lastWidth = this.offsetWidth;
         this.refresh();
 
         const observer = new ResizeObserver((entries) => {
@@ -30,25 +30,32 @@ class ViMasonry extends HTMLElement {
             if (!masonryEntry) return;
 
             const currentWidth = this.offsetWidth;
-            if (currentWidth === this.#lastWidth) return;
+            if (currentWidth === this._lastWidth) return;
 
-            this.#lastWidth = currentWidth;
+            this._lastWidth = currentWidth;
 
-            if (this.#resizeTimeout) {
-                clearTimeout(this.#resizeTimeout);
+            if (this._resizeTimeout) {
+                clearTimeout(this._resizeTimeout);
             }
 
-            this.#resizeTimeout = setTimeout(() => {
+            this._resizeTimeout = setTimeout(() => {
                 this.refresh();
-            }, 150);
+            }, 100);
         });
 
         observer.observe(this);
     }
 
-    #updateUI() {
-        this.#colCount = Math.floor((this.offsetWidth + this.#gap) / (this.#colWidth + this.#gap));
-        this.#colCount = Math.max(Math.min(this.#colCount, this.#items.length), 1);
+    _updateItems() {
+        this._items = Array.from(this.children);
+        this._items = this._items.map((child) => (child.dataset.ignore ? Array.from(child.children) : child)).flat();
+        this._items = this._items.filter((child) => window.getComputedStyle(child).display !== "none");
+    }
+
+    _updateUI() {
+        this._updateItems();
+        this._colCount = Math.floor((this.offsetWidth + this._gap) / (this._colWidth + this._gap));
+        this._colCount = Math.max(this._colCount, 1);
 
         // remove all children
         while (this.children.length) {
@@ -56,25 +63,26 @@ class ViMasonry extends HTMLElement {
         }
 
         // create as many columns as needed
-        this.#cols = [];
-        for (let i = 0; i < this.#colCount; i++) {
+        this._cols = [];
+        for (let i = 0; i < this._colCount; i++) {
             const newCol = document.createElement("div");
+            newCol.dataset.ignore = "true";
             newCol.style.display = "flex";
             newCol.style.flexDirection = "column";
-            newCol.style.gap = this.#gap + "px";
-            this.#cols.push(newCol);
+            newCol.style.gap = this._gap + "px";
+            this._cols.push(newCol);
         }
 
         // distribute children to the columns, and append the columns
-        this.#items.forEach((item, index) => {
-            this.#cols[index % this.#colCount].appendChild(item);
+        this._items.forEach((item, index) => {
+            this._cols[index % this._colCount].appendChild(item);
         });
-        this.#cols.forEach((col) => this.appendChild(col));
+        this._cols.forEach((col) => this.appendChild(col));
     }
 
     refresh(customOptions = {}) {
-        if (this.#isRefreshing) return;
-        this.#isRefreshing = true;
+        if (this._isRefreshing) return;
+        this._isRefreshing = true;
 
         const defaults = {
             transition: true,
@@ -89,26 +97,27 @@ class ViMasonry extends HTMLElement {
         if (document.startViewTransition && options.transition) {
             document
                 .startViewTransition(() => {
-                    this.#updateUI();
+                    this._updateUI();
                 })
                 .finished.finally(() => {
-                    this.#isRefreshing = false;
+                    this._isRefreshing = false;
                 });
         } else {
-            this.#updateUI();
-            this.#isRefreshing = false;
+            this._updateUI();
+            this._isRefreshing = false;
         }
     }
 
     gap(value) {
-        if (typeof value == "undefined") return this.#gap;
-        this.#gap = value;
+        if (typeof value === "undefined") return this._gap;
+        this._gap = value;
+        this.style.columnGap = `${this._gap}px`;
         return this;
     }
 
     columnWidth(value) {
-        if (typeof value == "undefined") return this.#colWidth;
-        this.#colWidth = value;
+        if (typeof value === "undefined") return this._colWidth;
+        this._colWidth = value;
         return this;
     }
 }
